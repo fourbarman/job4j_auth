@@ -30,13 +30,13 @@ public class PersonService {
     }
 
     public Optional<Person> save(Person person) {
-        Person savedPerson = null;
+        Optional<Person> savedPerson = Optional.empty();
         try {
-            savedPerson = this.personRepository.save(person);
+            savedPerson = Optional.of(this.personRepository.save(person));
         } catch (Exception e) {
             log.error(e.getMessage(), e);
         }
-        return Optional.ofNullable(savedPerson);
+        return savedPerson;
     }
 
     public boolean delete(Person person) {
