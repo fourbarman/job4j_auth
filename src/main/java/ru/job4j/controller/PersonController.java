@@ -3,8 +3,9 @@ package ru.job4j.controller;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
-import ru.job4j.PersonService;
+import ru.job4j.service.PersonService;
 import ru.job4j.domain.Person;
 
 import java.util.List;
@@ -20,6 +21,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class PersonController {
     private final PersonService persons;
+    private final BCryptPasswordEncoder encoder;
 
     @GetMapping("/")
     public List<Person> findAll() {
