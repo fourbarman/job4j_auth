@@ -5,11 +5,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+import ru.job4j.dto.PersonDTO;
 import ru.job4j.service.PersonService;
 import ru.job4j.domain.Person;
 import ru.job4j.util.PersonNotFoundException;
 import ru.job4j.util.SaveOrUpdateException;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 
 /**
@@ -97,5 +99,14 @@ public class PersonController {
     @GetMapping("/all")
     public List<Person> findAllPersons() {
         return this.persons.findAll();
+    }
+
+    @PatchMapping("/{id}")
+    public ResponseEntity<PersonDTO> partialUpdate(@PathVariable int id,
+                                                   @RequestBody PersonDTO personDTO)
+            throws IllegalAccessException, InvocationTargetException {
+        Person person = new Person(id, personDTO.getLogin(), encoder.encode(personDTO.getPassword()));
+        personDTO = this.persons.partialUpdate(id, person);
+        return new ResponseEntity<>(personDTO, HttpStatus.OK);
     }
 }
