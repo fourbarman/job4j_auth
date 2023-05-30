@@ -11,6 +11,7 @@ import ru.job4j.domain.Person;
 import ru.job4j.util.PersonNotFoundException;
 import ru.job4j.util.SaveOrUpdateException;
 
+import javax.validation.Valid;
 import java.util.List;
 
 /**
@@ -33,10 +34,7 @@ public class PersonController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Person> findById(@PathVariable int id) {
-        if (id <= 0) {
-            throw new IllegalStateException("id must be greater than 0");
-        }
+    public ResponseEntity<Person> findById(@Valid @PathVariable int id) {
         var person = this.persons.findById(id);
         if (person.isEmpty()) {
             throw new PersonNotFoundException("Person with id " + id + " was not found");
@@ -45,42 +43,20 @@ public class PersonController {
     }
 
     @PostMapping(value = "/", consumes = {"application/json", "text/plain"})
-    public ResponseEntity<Person> create(@RequestBody Person person) {
-        String login = person.getLogin();
-        String password = person.getPassword();
-        if (login == null || password == null) {
-            throw new NullPointerException("Login and Password should be not null");
-        }
-        if (login.isBlank()) {
-            throw new NullPointerException("Login should not be empty");
-        }
-        if (password.length() < 6) {
-            throw new IllegalStateException("Password should have 6 or more symbols");
-        }
-        var savedPerson = this.persons.save(person);
-        if (savedPerson.isEmpty()) {
-            throw new SaveOrUpdateException("Person already exists");
-        }
-        return new ResponseEntity<>(savedPerson.get(), HttpStatus.CREATED);
+    public ResponseEntity<Person> create(@Valid @RequestBody Person person) {
+        var savedPerson = this.persons.save(person)
+                .orElseThrow(() -> new SaveOrUpdateException("Person already exists"));
+        return new ResponseEntity<>(savedPerson, HttpStatus.CREATED);
     }
 
     @PutMapping("/")
-    public ResponseEntity<Void> update(@RequestBody Person person) {
-        if (person.getId() <= 0 || person.getLogin() == null || person.getPassword() == null) {
-            throw new NullPointerException("id should be grater 0 and login and Password should be not null");
-        }
-        var savedPerson = this.persons.save(person);
-        if (savedPerson.isEmpty()) {
-            throw new SaveOrUpdateException("Person already exists");
-        }
+    public ResponseEntity<Void> update(@Valid @RequestBody Person person) {
+        this.persons.save(person).orElseThrow(() -> new SaveOrUpdateException("Person already exists"));
         return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable int id) {
-        if (id <= 0) {
-            throw new IllegalStateException("id must be greater than 0");
-        }
+    public ResponseEntity<Void> delete(@Valid @PathVariable int id) {
         Person person = new Person();
         person.setId(id);
         if (!this.persons.delete(person)) {
@@ -90,7 +66,7 @@ public class PersonController {
     }
 
     @PostMapping("/sign-up")
-    public void signUp(@RequestBody Person person) {
+    public void signUp(@Valid @RequestBody Person person) {
         person.setPassword(encoder.encode(person.getPassword()));
         persons.save(person);
     }
@@ -101,12 +77,12 @@ public class PersonController {
     }
 
     @PatchMapping("/{id}")
-    public ResponseEntity<Person> partialUpdate(@PathVariable int id, @RequestBody PersonDTO personDTO) {
+    public ResponseEntity<Person> partialUpdate(@Valid @PathVariable int id, @Valid @RequestBody PersonDTO personDTO) {
         Person savedPerson = this.persons.save(
-                new Person(
-                        id,
-                        personDTO.getLogin(),
-                        encoder.encode(personDTO.getPassword()))
+                        new Person(
+                                id,
+                                personDTO.getLogin(),
+                                encoder.encode(personDTO.getPassword()))
                 )
                 .orElseThrow(
                         () -> new SaveOrUpdateException("Person with login " + personDTO.getLogin() + " already exists")
