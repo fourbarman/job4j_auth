@@ -11,7 +11,6 @@ import ru.job4j.domain.Person;
 import ru.job4j.util.PersonNotFoundException;
 import ru.job4j.util.SaveOrUpdateException;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 
 /**
@@ -102,11 +101,16 @@ public class PersonController {
     }
 
     @PatchMapping("/{id}")
-    public ResponseEntity<PersonDTO> partialUpdate(@PathVariable int id,
-                                                   @RequestBody PersonDTO personDTO)
-            throws IllegalAccessException, InvocationTargetException {
-        Person person = new Person(id, personDTO.getLogin(), encoder.encode(personDTO.getPassword()));
-        personDTO = this.persons.partialUpdate(id, person);
-        return new ResponseEntity<>(personDTO, HttpStatus.OK);
+    public ResponseEntity<Person> partialUpdate(@PathVariable int id, @RequestBody PersonDTO personDTO) {
+        Person savedPerson = this.persons.save(
+                new Person(
+                        id,
+                        personDTO.getLogin(),
+                        encoder.encode(personDTO.getPassword()))
+                )
+                .orElseThrow(
+                        () -> new SaveOrUpdateException("Person with login " + personDTO.getLogin() + " already exists")
+                );
+        return new ResponseEntity<>(savedPerson, HttpStatus.OK);
     }
 }
